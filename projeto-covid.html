@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeto de Análise de Dados da Pandemia</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Incluindo a biblioteca Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- Biblioteca para agrupar marcadores -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+    <!-- Turf.js para cálculo de centroides -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        nav.navbar {
+            background-color: #333;
+            padding: 10px 20px;
+        }
+
+        nav.navbar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        nav.navbar ul li {
+            margin-right: 20px;
+        }
+
+        nav.navbar ul li a {
+            color: white;
+            text-decoration: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #f1f1f1;
+        }
+
+        .legend {
+            background: white;
+            padding: 10px;
+            line-height: 1.5em;
+            color: #333;
+            border-radius: 5px;
+            font-size: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Barra de navegação -->
+    <nav class="navbar">
+        <ul>
+            <li><a href="index.html">Página Inicial</a></li>
+            <li><a href="projeto-covid.html">Análise de Dados da Pandemia</a></li>
+        </ul>
+    </nav>
+
+    <header>
+        <h1 style="margin-left: 40px;">Análise de Dados da Pandemia</h1>
+    </header>
+    \<section>No <a href="https://covid.saude.gov.br">Painel Coronavírus</a> fornecido pelo gov, é possível baixar os dados csv com tudo em relação a covid, então com isso decidi usar esses dados para criação de um exemplo para Portfólio.
+    </section>
+    <section>
+        <h2>Mapa de contaminações.</h2>
+        <p>
+            Outro dos dados interessantes de se observar é o de contaminação acumulada, pois ele fornece uma visão clara da extensão total do impacto da pandemia em diferentes regiões ao longo do tempo. Este indicador permite identificar áreas que enfrentaram os maiores desafios em termos de propagação da doença, ajudando a correlacionar fatores como densidade populacional, infraestrutura de saúde, e implementação de medidas preventivas.</p>
+
+        <!-- Aqui o mapa será inserido -->
+        <div id="map"></div> <!-- Container para o mapa -->
+    </section>
+
+    <footer>
+        <p>Contato: alexandre.m.profissional@gmail.com</p>
+    </footer>
+
+    <script>
+        const map = L.map('map', {
+            center: [-14.2350, -51.9253],
+            zoom: 4,
+            maxBounds: [[-33.74, -73.98], [5.27, -34.79]],
+            maxBoundsViscosity: 1.0
+        });
+    
+        // Camada base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+    
+        // Criar controle de legenda
+        const legenda = L.control({ position: 'bottomright' });
+    
+        legenda.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            return div;
+        };
+    
+        legenda.addTo(map);
+    
+        // Função para atualizar o conteúdo da legenda
+        function atualizarLegenda(tipo) {
+            const div = document.querySelector('.legend');
+            if (tipo === 'estados') {
+                div.innerHTML = `
+                    <h4>Casos Acumulados (Estados)</h4>
+                    <i style="background: rgb(245, 220, 220)"></i> 0 - 50k<br>
+                    <i style="background: rgb(255, 180, 180)"></i> 50k - 500k<br>
+                    <i style="background: rgb(255, 100, 100)"></i> 500k - 1M<br>
+                    <i style="background: rgb(255, 0, 0)"></i> > 1M<br>
+                `;
+            } else if (tipo === 'municipios') {
+                div.innerHTML = `
+                    <h4>Casos Acumulados (Municípios)</h4>
+                    <i style="background: rgb(245, 220, 220)"></i> 0 - 10k<br>
+                    <i style="background: rgb(255, 180, 180)"></i> 10k - 50k<br>
+                    <i style="background: rgb(255, 100, 100)"></i> 50k - 100k<br>
+                    <i style="background: rgb(255, 0, 0)"></i> > 100k<br>
+                `;
+            }
+        }
+    
+        // Atualizar a legenda inicial para estados
+        atualizarLegenda('estados');
+    
+        // Carregar os arquivos JSON
+        Promise.all([
+            fetch('Dados/brazil_geo.json').then(res => res.json()), // GeoJSON Estados
+            fetch('Dados/geojs-100-mun-v2.json').then(res => res.json()), // GeoJSON Municípios
+            fetch('Dados/Municipios.json').then(res => res.json()), // Dados COVID Municípios
+            fetch('Dados/MunicipiosEestados.json').then(res => res.json()) // Dados COVID Estados
+        ]).then(([estadosGeoJson, municipiosGeoJson, covidMunicipios, covidEstados]) => {
+    
+            // 1. Dados agregados por estado
+            const casosPorEstado = {};
+            covidEstados.forEach(({ "Municipio e Estado": estado, "Máximo de CasosAcumulado": casos }) => {
+                const siglaEstado = estado.slice(-2).toUpperCase(); // Extrair sigla do estado
+                casosPorEstado[siglaEstado] = parseInt(casos.replace(/,/g, ''), 10) || 0;
+            });
+    
+            console.log("Casos por Estado:", casosPorEstado);
+    
+            // 2. Criar camada para os estados
+            const estadoLayer = L.geoJSON(estadosGeoJson, {
+                style: feature => {
+                    const siglaEstado = feature.id;
+                    const casos = casosPorEstado[siglaEstado] || 0;
+                    const intensidade = Math.min(casos / 1000000, 1); // Normalização
+    
+                    // Interpolação bege para vermelho
+                    const vermelho = Math.round(245 + intensidade * (255 - 245));
+                    const verde = Math.round(245 - intensidade * 245);
+                    const azul = Math.round(220 - intensidade * 220);
+                    const cor = `rgb(${vermelho}, ${verde}, ${azul})`;
+    
+                    return {
+                        fillColor: cor,
+                        weight: 1,
+                        opacity: 1,
+                        color: 'white',
+                        fillOpacity: 0.7
+                    };
+                },
+                onEachFeature: (feature, layer) => {
+                    const siglaEstado = feature.id;
+                    const casos = casosPorEstado[siglaEstado] || 0;
+                    layer.bindPopup(`<b>${feature.properties.name}</b><br>Casos acumulados: ${casos.toLocaleString()}`);
+                }
+            });
+    
+            // 3. Criar camada para os municípios
+            const municipioLayer = L.geoJSON(municipiosGeoJson, {
+                style: feature => {
+                    const municipio = feature.properties.name;
+                    const dadosCovid = covidMunicipios.find(m => m.Municipio === municipio);
+                    const casos = parseInt(dadosCovid?.["Máximo de CasosAcumulado"].replace(/,/g, ''), 10) || 0;
+                    const intensidade = Math.min(casos / 100000, 1); // Normalização
+    
+                    // Interpolação bege para vermelho
+                    const vermelho = Math.round(245 + intensidade * (255 - 245));
+                    const verde = Math.round(245 - intensidade * 245);
+                    const azul = Math.round(220 - intensidade * 220);
+                    const cor = `rgb(${vermelho}, ${verde}, ${azul})`;
+    
+                    return {
+                        fillColor: cor,
+                        weight: 0.5,
+                        opacity: 1,
+                        color: 'white',
+                        fillOpacity: 0.7
+                    };
+                },
+                onEachFeature: (feature, layer) => {
+                    const municipio = feature.properties.name;
+                    const dadosCovid = covidMunicipios.find(m => m.Municipio === municipio);
+                    const casos = dadosCovid?.["Máximo de CasosAcumulado"] || "0";
+                    layer.bindPopup(`<b>${municipio}</b><br>Casos acumulados: ${casos}`);
+                }
+            });
+    
+            // Alternar entre as camadas conforme o nível de zoom
+            map.on('zoomend', () => {
+                if (map.getZoom() <= 6) {
+                    if (map.hasLayer(municipioLayer)) map.removeLayer(municipioLayer);
+                    if (!map.hasLayer(estadoLayer)) map.addLayer(estadoLayer);
+                    atualizarLegenda('estados');
+                } else {
+                    if (map.hasLayer(estadoLayer)) map.removeLayer(estadoLayer);
+                    if (!map.hasLayer(municipioLayer)) map.addLayer(municipioLayer);
+                    atualizarLegenda('municipios');
+                }
+            });
+    
+            // Adicionar camada inicial (estados)
+            map.addLayer(estadoLayer);
+        }).catch(error => console.error("Erro ao carregar dados:", error));
+    </script>
+    
+</body>
+
+</html>

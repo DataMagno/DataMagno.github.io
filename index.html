@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfólio de Alexandre</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+    <style>
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            background-color: #000000;
+            padding: 10px 0;
+        }
+        
+        /* Remover animações */
+        .profile {
+            margin-bottom: 2rem;
+        }
+
+        .profile-pic {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #profile-name {
+            font-size: 2rem;
+            color: #333;
+        }
+
+        /* Estilos dos botões circulares */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px;
+        }
+
+        .circle-button {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: bold;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            margin-right: 20px;
+        }
+
+        .circle-button a {
+            text-decoration: none;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        .circle-button span {
+            display: block;
+            line-height: 1.2;
+        }
+
+        .circle-button:hover {
+            transform: scale(1.1);
+        }
+
+        .button-container {
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Conteúdo principal -->
+    <div class="content">
+        <div class="main-content">
+            <!-- Perfil do usuário -->
+            <div class="profile">
+                <img src="images/Perfil.jpeg" alt="Foto de Alexandre Magno" class="profile-pic">
+                <h1 id="profile-name">Alexandre Magno</h1>
+                <p class="profile-text">
+                    Sou estudante de Engenharia Elétrica e apaixonado por Engenharia de Dados. Tenho experiência em análise de dados, sistemas embarcados e automação industrial.
+                </p>
+            </div>
+
+            <!-- Botões circulares -->
+            <div class="button-container">
+                <div class="circle-button">
+                    <a id="curriculo-button" href="#">
+                        <span>Meu</span>
+                        <span>Currículo</span>
+                    </a>
+                </div>
+                
+                <div class="circle-button">
+                    <a href="projeto-covid.html">
+                        <span>Análise de</span>
+                        <span>Dados da</span>
+                        <span>Pandemia</span>
+                    </a>
+                </div>
+
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer>
+        <p>Contato: <a href="mailto:alexandre.m.profissional@gmail.com">alexandre.m.profissional@gmail.com</a></p>
+    </footer>
+</body>
+</html>

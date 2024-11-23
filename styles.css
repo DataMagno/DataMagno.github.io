@@ -1,0 +1,215 @@
+/* Estilo básico */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+/* Barra de navegação */
+.navbar {
+    background-color: #333;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    padding: 10px 0;
+}
+
+.navbar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.navbar ul li {
+    display: inline-block;
+    margin: 0 15px;
+}
+
+.navbar ul li a {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px 15px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.navbar ul li a:hover {
+    background-color: #575757;
+    border-radius: 5px;
+}
+
+/* Conteúdo principal */
+.main-content {
+    text-align: center;
+    margin: 2rem auto;
+}
+
+.profile {
+    margin-bottom: 2rem;
+}
+
+/* Profile Pic */
+.profile-pic {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Texto do perfil */
+.profile-text {
+    font-size: 1.2rem;
+    color: #555;
+    margin-top: 1rem;
+}
+
+/* Botão redondo */
+.button-container {
+    display: flex; /* Usando flexbox para layout horizontal */
+    justify-content: center; /* Alinha o conteúdo horizontalmente no centro */
+    align-items: center; /* Alinha o conteúdo verticalmente no centro */
+    margin: 10px; /* Espaçamento entre os botões */
+}
+
+/* Botões circulares */
+.circle-button {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background-color: #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: bold;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: transform 0.3s ease, opacity 1s ease;
+    cursor: pointer;
+    margin-right: 20px; /* Espaçamento entre os botões */
+}
+
+/* Estilos do link dentro do botão */
+.circle-button a {
+    text-decoration: none;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+}
+
+.circle-button span {
+    display: block;
+    line-height: 1.2;
+}
+
+.circle-button:hover {
+    transform: scale(1.1);
+}
+
+/* Container de botões */
+.button-container {
+    flex-wrap: wrap; /* Permite que os botões quebrem linha em telas menores */
+    gap: 20px; /* Adiciona espaçamento uniforme entre os botões */
+}
+
+/* Seções */
+section {
+    margin: 2rem;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+section h2 {
+    margin-top: 0;
+}
+
+/* Rodapé */
+footer {
+    text-align: center;
+    padding: 1rem;
+    background-color: #333;
+    color: #fff;
+}
+
+/* Garante que o html e o body ocupem 100% da altura */
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Flexbox para "empurrar" o footer para baixo */
+.content {
+    flex: 1; /* Faz o conteúdo principal ocupar o espaço disponível */
+}
+
+/* Rodapé fixado no final */
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    margin-top: auto; /* Garante que o rodapé fique no final */
+}
+
+/* Estilos iniciais */
+.profile {
+    position: relative;
+    transition: transform 1s ease, top 1s ease, left 1s ease;
+}
+
+.profile-pic {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    transition: width 1s ease, height 1s ease;
+}
+
+#profile-name {
+    font-size: 2rem;
+    transition: transform 1s ease, font-size 1s ease;
+}
+
+/* Após animação */
+.profile.animate {
+    position: fixed;
+    top: 60px;
+    left: -500px; /* Ajustado para deixar a foto mais à esquerda */
+}
+
+.profile.animate .profile-pic {
+    width: 150px;
+    height: 150px;
+}
+
+.profile.animate #profile-name {
+    position: fixed;
+    top: 75px;
+    left: 175px; /* Nome permanece centralizado */
+    font-size: 1.5rem;
+}
+
+/* Esconde as bolhas (botões) durante a animação */
+.profile.animate ~ .button-container,
+.profile.animate ~ .profile-text {
+    opacity: 0;
+    pointer-events: none; /* Desativa os botões e a descrição durante a animação */
+}
