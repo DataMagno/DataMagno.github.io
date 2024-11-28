@@ -20,6 +20,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
     <style>
+        p {
+            text-indent: 40px; /* Indenta 40 pixels a primeira linha */
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -56,7 +59,7 @@
         footer {
             text-align: center;
             padding: 10px 0;
-            background-color: #f1f1f1;
+            background-color: #292929;
         }
 
         .legend {
@@ -76,10 +79,14 @@
             margin-right: 8px;
             opacity: 0.7;
         }
+        body{
+            text-align: justify;
+        }
     </style>
 </head>
 
 <body>
+    
 
     <!-- Barra de navegação -->
     <nav class="navbar">
@@ -92,8 +99,29 @@
     <header>
         <h1 style="margin-left: 40px;">Análise de Dados da Pandemia</h1>
     </header>
-    \<section>No <a href="https://covid.saude.gov.br">Painel Coronavírus</a> disponibilizado pelo governo, é possível baixar os dados em formato CSV, que contêm informações completas sobre a pandemia de COVID-19. Aproveitando essa oportunidade, decidi utilizar esses dados para criar um exemplo prático no meu portfólio de Engenharia de Dados, demonstrando como realizar a análise, o tratamento e a visualização de dados em um contexto real.
+    \<section>
+        <p>
+            A pandemia de COVID-19 trouxe um impacto profundo no mundo, gerando uma enorme quantidade de dados que refletem sua evolução e seus efeitos. No <a href="https://covid.saude.gov.br">Painel Coronavírus</a>, o governo brasileiro disponibiliza informações completas e atualizadas em formato CSV, cobrindo casos confirmados, óbitos, taxas de recuperação e outros indicadores essenciais.</p>
+
+        <p>
+            Aproveitando esse valioso repositório de dados, desenvolvi um projeto que integra meu portfólio de Engenharia de Dados. Esse trabalho prático explora o tratamento, a análise e a visualização dos dados da COVID-19, destacando o uso de ferramentas e técnicas essenciais na área, desde a ingestão de dados até a criação de painéis interativos que traduzem os números em insights relevantes. Este projeto exemplifica como transformar grandes volumes de dados em informações úteis, contribuindo para decisões fundamentadas e uma compreensão mais clara da pandemia.</p>
     </section>
+    <section>
+        <p> 
+            A primeira tarefa foi a extração de dados. Utilizando a biblioteca Selenium em Python, realizei web scraping no site do governo para obter os arquivos disponibilizados, possibilitando o início do trabalho com os dados. 
+
+        </p> 
+        <p> 
+            Em seguida, enfrentei o desafio de definir como tratar e armazenar esses dados em um banco de dados. Como todas as colunas dos arquivos CSV eram idênticas, optei por concatená-los, criando um único DataFrame no Pandas, onde cada arquivo adicionava novas linhas à estrutura unificada. </p> 
+        <p> 
+            Com o DataFrame consolidado, o tratamento dos dados tornou-se mais simples. Primeiramente, resetei os índices e garanti a ausência de duplicatas. Além disso, converti a coluna de datas para o formato datetime, facilitando o trabalho com informações temporais. 
+        </p> 
+        <p> 
+            Identifiquei e tratei outliers durante a análise inicial, especialmente em registros do primeiro ano da pandemia. Nessa época, erros frequentes resultavam em dados inseridos de forma incorreta e corrigidos nos dias seguintes, gerando valores fora do padrão. Para evitar que esses dados comprometessem as análises futuras, optei por excluí-los. </p> <p> Após o tratamento dos dados, armazenei-os no PostgreSQL e conectei o banco ao Metabase, onde realizei as análises que serão apresentadas a seguir.
+                
+        </p>
+    </section>
+
     <section>
         <h2>Mapa de contaminações.</h2>
         <p>
@@ -132,15 +160,17 @@
     
         // Função para atualizar o conteúdo da legenda
         function atualizarLegenda(tipo) {
-            const div = document.querySelector('.legend');
-            if (tipo === 'estados') {
-                div.innerHTML = `
-                    <h4>Casos Acumulados (Estados)</h4>
-                    <i style="background: rgb(245, 220, 220)"></i> 0 - 50k<br>
-                    <i style="background: rgb(255, 180, 180)"></i> 50k - 500k<br>
-                    <i style="background: rgb(255, 100, 100)"></i> 500k - 1M<br>
-                    <i style="background: rgb(255, 0, 0)"></i> > 1M<br>
-                `;
+    const div = document.querySelector('.legend');
+    if (tipo === 'estados') {
+        div.innerHTML = `
+            <h4>Casos Acumulados (Estados)</h4>
+            <i style="background: rgb(255, 230, 230)"></i> 0 - 50k<br>
+            <i style="background: rgb(255, 180, 180)"></i> 50k - 500k<br>
+            <i style="background: rgb(255, 120, 120)"></i> 500k - 1M<br>
+            <i style="background: rgb(255, 70, 70)"></i> 1M - 2.5M<br>
+            <i style="background: rgb(255, 0, 0)"></i> 2.5M - 5M<br>
+            <i style="background: rgb(200, 0, 0)"></i> > 5M<br>
+        `;
             } else if (tipo === 'municipios') {
                 div.innerHTML = `
                     <h4>Casos Acumulados (Municípios)</h4>
@@ -160,8 +190,10 @@
             fetch('Dados/brazil_geo.json').then(res => res.json()), // GeoJSON Estados
             fetch('Dados/geojs-100-mun-v2.json').then(res => res.json()), // GeoJSON Municípios
             fetch('Dados/Municipios.json').then(res => res.json()), // Dados COVID Municípios
-            fetch('Dados/MunicipiosEestados.json').then(res => res.json()) // Dados COVID Estados
-        ]).then(([estadosGeoJson, municipiosGeoJson, covidMunicipios, covidEstados]) => {
+            fetch('Dados/MunicipiosEestados.json').then(res => res.json()), // Dados COVID Estados
+            fetch('Dados/populacao_estados.json').then(res => res.json())//
+
+        ]).then(([estadosGeoJson, municipiosGeoJson, covidMunicipios, covidEstados, populacaoEstados]) => {
     
             // 1. Dados agregados por estado
             const casosPorEstado = {};
@@ -174,31 +206,42 @@
     
             // 2. Criar camada para os estados
             const estadoLayer = L.geoJSON(estadosGeoJson, {
-                style: feature => {
-                    const siglaEstado = feature.id;
-                    const casos = casosPorEstado[siglaEstado] || 0;
-                    const intensidade = Math.min(casos / 1000000, 1); // Normalização
-    
-                    // Interpolação bege para vermelho
-                    const vermelho = Math.round(245 + intensidade * (255 - 245));
-                    const verde = Math.round(245 - intensidade * 245);
-                    const azul = Math.round(220 - intensidade * 220);
-                    const cor = `rgb(${vermelho}, ${verde}, ${azul})`;
-    
-                    return {
-                        fillColor: cor,
-                        weight: 1,
-                        opacity: 1,
-                        color: 'white',
-                        fillOpacity: 0.7
-                    };
-                },
-                onEachFeature: (feature, layer) => {
-                    const siglaEstado = feature.id;
-                    const casos = casosPorEstado[siglaEstado] || 0;
-                    layer.bindPopup(`<b>${feature.properties.name}</b><br>Casos acumulados: ${casos.toLocaleString()}`);
-                }
-            });
+    style: feature => {
+        const siglaEstado = feature.id;
+        const casos = casosPorEstado[siglaEstado] || 0;
+
+        // Ajuste das faixas e cores
+        let cor;
+        if (casos <= 50000) {
+            cor = "rgb(255, 230, 230)"; // Tom mais claro
+        } else if (casos <= 500000) {
+            cor = "rgb(255, 180, 180)";
+        } else if (casos <= 1000000) {
+            cor = "rgb(255, 120, 120)";
+        } else if (casos <= 3000000) {
+            cor = "rgb(255, 70, 70)";
+        } else if(casos <= 5000000){
+            cor = "rgb(255, 0, 0)";
+        
+        } else {
+            cor = "rgb(200, 0, 0)"; // Tom mais escuro
+        }
+
+        return {
+            fillColor: cor,
+            weight: 1,
+            opacity: 1,
+            color: 'white',
+            fillOpacity: 0.7
+        };
+    },
+    onEachFeature: (feature, layer) => {
+        const siglaEstado = feature.id;
+        const casos = casosPorEstado[siglaEstado] || 0;
+        layer.bindPopup(`<b>${feature.properties.name}</b><br>Casos acumulados: ${casos.toLocaleString()}`);
+    }
+});
+
     
             // 3. Criar camada para os municípios
             const municipioLayer = L.geoJSON(municipiosGeoJson, {
