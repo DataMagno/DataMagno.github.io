@@ -100,6 +100,7 @@
         <h1 style="margin-left: 40px;">Análise de Dados da Pandemia</h1>
     </header>
     \<section>
+        <h2>Contextualização.</h2>
         <p>
             A pandemia de COVID-19 trouxe um impacto profundo no mundo, gerando uma enorme quantidade de dados que refletem sua evolução e seus efeitos. No <a href="https://covid.saude.gov.br">Painel Coronavírus</a>, o governo brasileiro disponibiliza informações completas e atualizadas em formato CSV, cobrindo casos confirmados, óbitos, taxas de recuperação e outros indicadores essenciais.</p>
 
@@ -107,6 +108,7 @@
             Aproveitando esse valioso repositório de dados, desenvolvi um projeto que integra meu portfólio de Engenharia de Dados. Esse trabalho prático explora o tratamento, a análise e a visualização dos dados da COVID-19, destacando o uso de ferramentas e técnicas essenciais na área, desde a ingestão de dados até a criação de painéis interativos que traduzem os números em insights relevantes. Este projeto exemplifica como transformar grandes volumes de dados em informações úteis, contribuindo para decisões fundamentadas e uma compreensão mais clara da pandemia.</p>
     </section>
     <section>
+        <h2>Extração e Tratamento dos dados</h2>
         <p> 
             A primeira tarefa foi a extração de dados. Utilizando a biblioteca Selenium em Python, realizei web scraping no site do governo para obter os arquivos disponibilizados, possibilitando o início do trabalho com os dados. 
 
@@ -118,6 +120,9 @@
         </p> 
         <p> 
             Identifiquei e tratei outliers durante a análise inicial, especialmente em registros do primeiro ano da pandemia. Nessa época, erros frequentes resultavam em dados inseridos de forma incorreta e corrigidos nos dias seguintes, gerando valores fora do padrão. Para evitar que esses dados comprometessem as análises futuras, optei por excluí-los. </p> <p> Após o tratamento dos dados, armazenei-os no PostgreSQL e conectei o banco ao Metabase, onde realizei as análises que serão apresentadas a seguir.
+            <p> 
+                Para ver melhor sobre os códigos, tanto da extração quanto do tratamento de dados, acesse meu github: DataMagno
+            </p>
                 
         </p>
     </section>
@@ -163,13 +168,13 @@
     const div = document.querySelector('.legend');
     if (tipo === 'estados') {
         div.innerHTML = `
-            <h4>Casos Acumulados (Estados)</h4>
-            <i style="background: rgb(255, 230, 230)"></i> 0 - 50k<br>
-            <i style="background: rgb(255, 180, 180)"></i> 50k - 500k<br>
-            <i style="background: rgb(255, 120, 120)"></i> 500k - 1M<br>
-            <i style="background: rgb(255, 70, 70)"></i> 1M - 2.5M<br>
-            <i style="background: rgb(255, 0, 0)"></i> 2.5M - 5M<br>
-            <i style="background: rgb(200, 0, 0)"></i> > 5M<br>
+            <h4>Casos por 100 mil habitantes (Estados):</h4>
+            <i style="background: rgb(255, 230, 230)"></i> 0 - 5k<br>
+            <i style="background: rgb(255, 180, 180)"></i> 5k - 15k<br>
+            <i style="background: rgb(255, 120, 120)"></i> 15k - 1M<br>
+            <i style="background: rgb(255, 70, 70)"></i> 15k - 20k<br>
+            <i style="background: rgb(255, 0, 0)"></i> 20k - 25k<br>
+            <i style="background: rgb(200, 0, 0)"></i> > 25k<br>
         `;
             } else if (tipo === 'municipios') {
                 div.innerHTML = `
@@ -190,57 +195,51 @@
             fetch('Dados/brazil_geo.json').then(res => res.json()), // GeoJSON Estados
             fetch('Dados/geojs-100-mun-v2.json').then(res => res.json()), // GeoJSON Municípios
             fetch('Dados/Municipios.json').then(res => res.json()), // Dados COVID Municípios
-            fetch('Dados/MunicipiosEestados.json').then(res => res.json()), // Dados COVID Estados
-            fetch('Dados/populacao_estados.json').then(res => res.json())//
-
-        ]).then(([estadosGeoJson, municipiosGeoJson, covidMunicipios, covidEstados, populacaoEstados]) => {
-    
-            // 1. Dados agregados por estado
-            const casosPorEstado = {};
-            covidEstados.forEach(({ "Municipio e Estado": estado, "Máximo de CasosAcumulado": casos }) => {
-                const siglaEstado = estado.slice(-2).toUpperCase(); // Extrair sigla do estado
-                casosPorEstado[siglaEstado] = parseInt(casos.replace(/,/g, ''), 10) || 0;
+            fetch('Dados/casos_por_100k.json').then(res => res.json()), // Dados COVID Estados por 100k habitantes
+            fetch('Dados/populacao_estados.json').then(res => res.json()) // População Estados
+        ]).then(([estadosGeoJson, municipiosGeoJson, covidMunicipios, covidEstados100k]) => {
+            // 1. Dados agregados por estado para casos por 100 mil habitantes
+            const casosPorEstado100k = {};
+            covidEstados100k.forEach(({ Estado, casos_por_100k }) => {
+                casosPorEstado100k[Estado] = casos_por_100k;
             });
     
-            console.log("Casos por Estado:", casosPorEstado);
+            console.log("Casos por 100 mil habitantes (Estados):", casosPorEstado100k);
     
             // 2. Criar camada para os estados
             const estadoLayer = L.geoJSON(estadosGeoJson, {
-    style: feature => {
-        const siglaEstado = feature.id;
-        const casos = casosPorEstado[siglaEstado] || 0;
-
-        // Ajuste das faixas e cores
-        let cor;
-        if (casos <= 50000) {
-            cor = "rgb(255, 230, 230)"; // Tom mais claro
-        } else if (casos <= 500000) {
-            cor = "rgb(255, 180, 180)";
-        } else if (casos <= 1000000) {
-            cor = "rgb(255, 120, 120)";
-        } else if (casos <= 3000000) {
-            cor = "rgb(255, 70, 70)";
-        } else if(casos <= 5000000){
-            cor = "rgb(255, 0, 0)";
-        
-        } else {
-            cor = "rgb(200, 0, 0)"; // Tom mais escuro
-        }
-
-        return {
-            fillColor: cor,
-            weight: 1,
-            opacity: 1,
-            color: 'white',
-            fillOpacity: 0.7
-        };
-    },
-    onEachFeature: (feature, layer) => {
-        const siglaEstado = feature.id;
-        const casos = casosPorEstado[siglaEstado] || 0;
-        layer.bindPopup(`<b>${feature.properties.name}</b><br>Casos acumulados: ${casos.toLocaleString()}`);
-    }
-});
+                style: feature => {
+                    const siglaEstado = feature.id;
+                    const casos100k = casosPorEstado100k[siglaEstado] || 0;
+    
+                    // Ajuste das faixas e cores
+                    let cor;
+                    if (casos100k <= 5000) {
+                        cor = "rgb(255, 230, 230)";
+                    } else if (casos100k <= 15000) {
+                        cor = "rgb(255, 180, 180)";
+                    } else if (casos100k <= 20000) {
+                        cor = "rgb(255, 120, 120)";
+                    } else if (casos100k <= 25000) {
+                        cor = "rgb(255, 70, 70)";
+                    } else {
+                        cor = "rgb(200, 0, 0)";
+                    }
+    
+                    return {
+                        fillColor: cor,
+                        weight: 1,
+                        opacity: 1,
+                        color: 'white',
+                        fillOpacity: 0.7
+                    };
+                },
+                onEachFeature: (feature, layer) => {
+                    const siglaEstado = feature.id;
+                    const casos100k = casosPorEstado100k[siglaEstado] || 0;
+                    layer.bindPopup(`<b>${feature.properties.name}</b><br>Casos por 100 mil habitantes: ${casos100k.toLocaleString(undefined, { maximumFractionDigits: 1 })}`);
+                }
+            });
 
     
             // 3. Criar camada para os municípios
